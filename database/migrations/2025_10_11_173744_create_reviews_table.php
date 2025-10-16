@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('reviews', function (Blueprint $table) {
+            $table->id('review_id'); // PK
+
+            // Foreign Keys
+            $table->foreignId('user_id')->constrained('users', 'id');
+            $table->foreignId('product_id')->constrained('products', 'product_id');
+
+            $table->tinyInteger('rating'); // INT สำหรับเก็บคะแนน 1-5
+            $table->text('comment')->nullable(); // TEXT สำหรับข้อความรีวิว, อาจจะว่างได้
+            $table->timestamps(); // created_at และ updated_at
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('reviews');
+    }
+};

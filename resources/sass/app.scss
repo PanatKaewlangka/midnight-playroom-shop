@@ -1,0 +1,41 @@
+// Fonts
+@import url('https://fonts.bunny.net/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import 'bootstrap/scss/bootstrap';
+
+// Custom Dark Mode Styles (ฉบับรวมและแก้ไข)
+[data-bs-theme="dark"] {
+    // กำหนดพื้นหลังและสีตัวอักษรหลักของ Body
+    body {
+        background-color: #212529;
+        color: #dee2e6;
+    }
+
+    // Override Navbar background when in dark mode
+    .navbar.bg-white {
+        background-color: #343a40 !important; // Forces Navbar to dark color
+    }
+    
+    // Override Navbar links/text color
+    .navbar-light .navbar-brand,
+    .navbar-light .nav-link {
+        color: #dee2e6 !important; // Forces links to light color
+    }
+    
+    // Make cards look better in dark mode
+    .card {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #dee2e6;
+    }
+
+    // Custom style for secondary buttons
+    .btn-secondary {
+        --bs-btn-bg: #495057;
+        --bs-btn-border-color: #495057;
+    }
+}
