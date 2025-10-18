@@ -5,20 +5,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'The Midnight Playroom') }}</title>
 
-    <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
     
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Vite Scripts & Styles -->
-    {{-- นี่คือ "สายไฟ" ที่ถูกต้องสำหรับโปรเจคของคุณ (Bootstrap + SASS) --}}
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body>
@@ -26,7 +21,6 @@
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    {{-- FIX: เปลี่ยนไปใช้ชื่อแบรนด์โดยตรงและเพิ่มสไตล์ตามธีม --}}
                     <span class="fw-bold fs-5">The Midnight Playroom</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
@@ -34,26 +28,53 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    
                     {{-- Left Side Of Navbar --}}
                     <ul class="navbar-nav me-auto">
                         
-                        {{-- FIX: ย้าย Dashboard ออกจาก @auth เพื่อให้ Guest เห็น (ทำหน้าที่เป็น Member Landing Page) --}}
+                        {{-- Dashboard Link --}}
                         <li class="nav-item">
-                            <a class="nav-link fw-bold text-danger" href="{{ url('/home') }}">
+                            @php $isHomeActive = Route::is('home'); @endphp
+                            {{-- เพิ่ม border-3 ที่นี่ --}}
+                            <a class="nav-link fw-bold {{ $isHomeActive ? 'active border-bottom border-3 rounded-0' : '' }}" href="{{ url('/home') }}">
                                 <i class="bi bi-house-door-fill me-1"></i> Dashboard
                             </a>
                         </li>
                         
+                        {{-- Products Link --}}
                         <li class="nav-item">
-                            {{-- เพิ่ม Icon ให้ Products --}}
-                            <a class="nav-link" href="{{ route('products.index') }}">
+                            @php $isProductsActive = Route::is('products.index') || Route::is('products.show'); @endphp
+                            {{-- เพิ่ม border-3 ที่นี่ --}}
+                            <a class="nav-link {{ $isProductsActive ? 'active fw-bold border-bottom border-3 rounded-0' : '' }}" href="{{ route('products.index') }}">
                                 <i class="bi bi-box-seam me-1"></i> Products
                             </a>
                         </li>
+                        
+                        {{-- Cart Link (ส่วนที่นำกลับมา) --}}
                         <li class="nav-item">
-                            {{-- 3. เพิ่ม Icon รถเข็น --}}
-                            <a class="nav-link" href="{{ route('cart.index') }}">
-                                <i class="bi bi-cart"></i> Cart
+                            @php $isCartActive = Route::is('cart.*'); @endphp
+                            {{-- เพิ่ม border-3 ที่นี่ --}}
+                            <a class="nav-link {{ $isCartActive ? 'active fw-bold border-bottom border-3 rounded-0' : '' }}" href="{{ route('cart.index') }}">
+                                <i class="bi bi-cart me-1"></i> Cart
+                                
+                                @php
+                                    // Logic Cart Count ที่หายไป ถูกนำกลับมา
+                                    $cartItems = session()->get('cart', []);
+                                    $totalQuantity = 0;
+                                    if (is_array($cartItems)) {
+                                        foreach ($cartItems as $item) {
+                                            $totalQuantity += $item['quantity'] ?? 0;
+                                        }
+                                    }
+                                    $cartCount = $totalQuantity;
+                                @endphp
+                                
+                                @if ($cartCount > 0) 
+                                    <span class="badge rounded-pill bg-danger">
+                                        {{ $cartCount }}
+                                        <span class="visually-hidden">items in cart</span>
+                                    </span>
+                                @endif
                             </a> 
                         </li>
                     </ul>
@@ -86,23 +107,22 @@
                                 </li>
                             @endif
                         @else
-                            {{-- ลิงก์ My Dashboard ถูกย้ายไปอยู่ฝั่ง Left Side แล้ว --}}
-                            
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     {{ Auth::user()->name }}
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    {{-- โค้ดสำหรับแสดงลิงก์ Admin Dashboard --}}
+                                    
+                                    {{-- Admin Dashboard Link (ใน Dropdown) --}}
                                     @can('is_admin')
-                                        <a class="dropdown-item text-danger fw-bold" href="{{ route('admin.dashboard') }}">
+                                        <a class="dropdown-item fw-bold {{ Route::is('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                                             <i class="bi bi-person-badge me-2"></i> Admin Dashboard
                                         </a>
                                         <div class="dropdown-divider"></div>
                                     @endcan
                                     
-                                    <a class="dropdown-item" href="{{ route('orders.index') }}">
+                                    <a class="dropdown-item {{ Route::is('orders.index') ? 'active' : '' }}" href="{{ route('orders.index') }}">
                                         <i class="bi bi-journal-text me-2"></i> Order History
                                     </a>
                                     <div class="dropdown-divider"></div>
@@ -124,7 +144,6 @@
 
         {{-- Main Content Area --}}
         <main class="py-4">
-            {{-- @yield('content') คือจุดที่เนื้อหาของแต่ละหน้าจะถูกนำมาแสดง --}}
             @yield('content')
         </main>
     </div>
@@ -162,7 +181,6 @@
             })
         })()
     </script>
-    {{-- @yield('scripts') สำหรับ View ลูกๆ ที่ต้องการเพิ่ม script ของตัวเอง --}}
     @yield('scripts') 
 </body>
 </html>

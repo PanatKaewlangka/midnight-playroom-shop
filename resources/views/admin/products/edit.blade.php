@@ -22,7 +22,8 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('admin.products.update', $product->product_id) }}" method="POST" enctype="multipart/form-data">
+                    {{-- Form ยังคงเป็น multipart/form-data อยู่ แต่ถ้าไม่ใช้ file upload ก็สามารถลบออกได้ --}}
+                    <form action="{{ route('admin.products.update', $product->product_id) }}" method="POST">
                         @csrf
                         @method('PUT') {{-- ใช้ Method PUT สำหรับการ Update --}}
 
@@ -58,17 +59,22 @@
                             </select>
                         </div>
 
-                        {{-- แสดงรูปปัจจุบัน และให้ Upload รูปใหม่ได้ --}}
+                        {{-- ส่วนที่แก้ไข: ยืนยันให้เป็น type="text" สำหรับการพิมพ์ URL --}}
                         <div class="mb-3">
-                            <label for="image" class="form-label">Product Image (Optional)</label>
+                            <label for="image_url" class="form-label">Product Image **URL**</label>
                             @if($product->image_url)
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="max-height: 100px; border-radius: 5px;">
-                                    <small class="d-block text-muted">Current Image</small>
+                                    {{-- ตรวจสอบว่ารูปภาพเป็น URL ภายนอก หรือเป็น path ใน storage ก่อนแสดง --}}
+                                    @php
+                                        $imageUrl = Str::startsWith($product->image_url, ['http://', 'https://']) ? $product->image_url : asset('storage/' . $product->image_url);
+                                    @endphp
+                                    <img src="{{ $imageUrl }}" alt="{{ $product->name }}" style="max-height: 100px; border-radius: 5px;">
+                                    <small class="d-block text-muted">Current Image (URL/Path: **{{ $product->image_url }}**)</small>
                                 </div>
                             @endif
-                            <input type="text" class="form-control" id="image_url" name="image_url" value="{{ old('image_url') }}">
-                            <small class="text-muted">Upload a new image to replace the current one.</small>
+                            {{-- *** ให้ค่าเก่าเป็นค่าปัจจุบันของสินค้า และเป็น type="text" สำหรับพิมพ์ URL *** --}}
+                            <input type="text" class="form-control" id="image_url" name="image_url" value="{{ old('image_url', $product->image_url) }}">
+                            <small class="text-muted">Enter the full URL (e.g., https://example.com/image.jpg) or the storage path.</small>
                         </div>
 
                         <hr>

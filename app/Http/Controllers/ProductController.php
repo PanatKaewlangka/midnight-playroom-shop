@@ -3,38 +3,44 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Category; // ต้อง import Category Model
+use App\Models\Category;
 use App\Models\Order;
-use Illuminate\Http\Request; // ต้อง import Request
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // อาจต้องใช้
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource with optional category filtering.
+     * Display a listing of the resource with optional category filtering and search.
      */
-    public function index(Request $request) // ต้องรับ Request object
+    public function index(Request $request)
     {
-        // 1. ดึง Category ทั้งหมดเพื่อแสดงในตัวกรอง (Filter)
+        // 1. ดึง Category ทั้งหมดเพื่อแสดงในตัวกรอง
         $categories = Category::all();
         
         // 2. เริ่ม Query สำหรับ Products
         $productsQuery = Product::orderBy('created_at', 'desc');
 
-        // 3. ตรวจสอบว่ามีการส่งพารามิเตอร์ 'category' มาหรือไม่
+        // 3. ตรวจสอบและประมวลผลคำค้นหา (Search Query)
+        $searchQuery = $request->query('q');
+        if ($searchQuery) {
+            // ใช้ LIKE %...% เพื่อค้นหาชื่อสินค้าที่ตรงกับคำค้นหา (ไม่คำนึงถึงตัวพิมพ์เล็ก/ใหญ่)
+            $productsQuery->where('name', 'LIKE', '%' . $searchQuery . '%');
+        }
+
+        // 4. ตรวจสอบและประมวลผลตัวกรอง Category
         $selectedCategory = $request->query('category');
-        
         if ($selectedCategory) {
-            // 4. ถ้ามี ให้กรองเฉพาะสินค้าใน Category นั้น
             $productsQuery->where('category_id', $selectedCategory);
         }
 
-        // 5. ดึงข้อมูลสินค้าที่ถูกกรอง (หรือทั้งหมด)
+        // 5. ดึงข้อมูลสินค้าที่ถูกกรองและค้นหา
         $products = $productsQuery->get();
 
-        // ส่งข้อมูลทั้ง Products และ Categories ไปยัง View
-        return view('products.index', compact('products', 'categories', 'selectedCategory'));
+        // ส่งข้อมูลทั้งหมด รวมถึงคำค้นหา ($searchQuery) ไปยัง View
+        return view('products.index', compact('products', 'categories', 'selectedCategory', 'searchQuery'));
     }
 
     /**
@@ -83,17 +89,18 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // *** แก้ไข: ลบ 'url' ออกจาก image_url validation ***
         $request->validate([
             'name' => 'required|max:255',
             'description' => 'required',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,category_id',
-            // *** อัปเดตตามการใช้ URL ***
-            'image_url' => 'nullable|url|max:500', 
+            // *** แก้ไขที่นี่: ลบ |url เพื่อรองรับ path ภายใน (ที่ไม่ใช่ URL เต็มรูปแบบ) ***
+            'image_url' => 'nullable|string|max:500', 
         ]);
 
-        // *** อัปเดตตามการใช้ URL: เปลี่ยน $request->except('image') เป็น $request->only(...) ***
+        // *** ใช้ $request->only() ตามโค้ดเดิมของคุณ (ซึ่งถูกต้องแล้ว) ***
         $productData = $request->only(['name', 'description', 'price', 'stock_quantity', 'category_id', 'image_url']);
 
         Product::create($productData);
@@ -109,17 +116,18 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        // *** แก้ไข: ลบ 'url' ออกจาก image_url validation ***
         $request->validate([
             'name' => 'required|max:255',
             'description' => 'required',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,category_id',
-            // *** อัปเดตตามการใช้ URL ***
-            'image_url' => 'nullable|url|max:500', 
+            // *** แก้ไขที่นี่: ลบ |url เพื่อรองรับ path ภายใน (ที่ไม่ใช่ URL เต็มรูปแบบ) ***
+            'image_url' => 'nullable|string|max:500', 
         ]);
 
-        // *** อัปเดตตามการใช้ URL: เปลี่ยน $request->except('image') เป็น $request->only(...) ***
+        // *** ใช้ $request->only() ตามโค้ดเดิมของคุณ (ซึ่งถูกต้องแล้ว) ***
         $productData = $request->only(['name', 'description', 'price', 'stock_quantity', 'category_id', 'image_url']);
 
         $product->update($productData);

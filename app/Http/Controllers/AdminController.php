@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // เพิ่มมาจากการ merge
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // DB facade ถูกใช้สำหรับการคำนวณ SUM
 
 class AdminController extends Controller
 {
@@ -19,15 +20,34 @@ class AdminController extends Controller
         $totalOrders = Order::count();
         $pendingOrders = Order::where('status', 'PENDING')->count();
 
-        // 2. ดึงข้อมูลสินค้า 5 รายการล่าสุด
-        $recentProducts = Product::orderBy('created_at', 'desc')->get();
+        // 2. ดึงข้อมูลสินค้าล่าสุด พร้อมคำนวณยอดขายรวม (Total Sold) ของแต่ละชิ้น
+        $products = Product::withCount(['orderItems as total_sold' => function ($query) {
+            $query->select(DB::raw('sum(quantity)')); 
+        }])
+        ->orderBy('created_at', 'desc')
+        //->take(10) // *** ควรกำหนด take(10) เพื่อจำกัดสินค้าล่าสุด ***
+        ->get();
 
-        // 3. ส่งข้อมูลทั้งหมดไปที่ View
+        // 3. คำนวณยอดขายรวมทั้งหมด (Total Items Sold)
+        $totalItemsSold = $products->sum('total_sold'); 
+        
+        // ******************************************************************
+        // *** 4. คำนวณรายได้รวม (Total Revenue) ***
+        // *** ใช้ price_at_purchase และส่งตัวแปรไปยัง View ***
+        // ******************************************************************
+        $totalRevenue = DB::table('order_items')
+            ->select(DB::raw('SUM(price_at_purchase * quantity) AS total_revenue')) 
+            ->value('total_revenue'); 
+        // ******************************************************************
+
+        // 5. ส่งข้อมูลทั้งหมดไปที่ View
         return view('admin.dashboard', [
             'totalProducts' => $totalProducts,
             'totalOrders' => $totalOrders,
             'pendingOrders' => $pendingOrders,
-            'recentProducts' => $recentProducts,
+            'recentProducts' => $products, // ใช้ชื่อ $recentProducts ตามที่ View คาดหวัง
+            'totalItemsSold' => $totalItemsSold, // ยอดรวมจำนวนชิ้นที่ขาย
+            'totalRevenue' => $totalRevenue, // *** เพิ่มตัวแปรรายได้รวม ***
         ]);
     }
 
@@ -55,9 +75,6 @@ class AdminController extends Controller
      */
     public function completeOrder(Request $request, Order $order)
     {
-        // ใน view เราใช้สถานะ 'COMPLETED' (ตัวพิมพ์ใหญ่)
-        // แต่ใน Controller เดิมใช้ 'completed' (ตัวพิมพ์เล็ก)
-        // ปรับให้ตรงกันเพื่อความสอดคล้อง
         $completed_status = 'COMPLETED'; 
 
         // 1. ตรวจสอบสถานะก่อนเปลี่ยน เพื่อป้องกันการเปลี่ยนซ้ำ
@@ -65,7 +82,6 @@ class AdminController extends Controller
             
             // 2. อัปเดตสถานะของคำสั่งซื้อ
             $order->status = $completed_status;
-            // $order->completed_at = now(); // บันทึกเวลาที่เสร็จสิ้น (ถูกคอมเมนต์ออกชั่วคราวเพื่อแก้ไข Error 1054: Unknown column 'completed_at')
             $order->save();
 
             // 3. ส่งกลับไปที่หน้ารายการพร้อมข้อความสำเร็จ

@@ -32,8 +32,7 @@
 
             <p>{{ $product->description }}</p>
 
-            
-
+        
             {{-- Form สำหรับ Add to Cart --}}
             <form action="{{ route('cart.add', $product->product_id) }}" method="POST">
                 @csrf
