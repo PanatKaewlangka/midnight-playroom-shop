@@ -128,7 +128,7 @@
                                     <div class="dropdown-divider"></div>
                                     
                                     <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    onclick="event.preventDefault(); confirmLogout();">
                                         {{ __('Logout') }}
                                     </a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
@@ -181,6 +181,19 @@
             })
         })()
     </script>
-    @yield('scripts') 
+        {{-- *** บรรทัดที่ต้องเพิ่ม: ฟังก์ชัน Logout Alert *** --}}
+        @section('scripts')
+        <script>
+            function confirmLogout() {
+                let message = "Are you sure you want to log out? WARNING: Any items currently in your cart will be lost.";
+                
+                if (confirm(message)) {
+                    document.getElementById('logout-form').submit();
+                }
+            }
+        </script>
+        @endsection
+        {{-- ******************************************* --}}
+        @yield('scripts') 
 </body>
 </html>

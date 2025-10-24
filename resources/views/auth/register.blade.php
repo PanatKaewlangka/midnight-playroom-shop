@@ -4,13 +4,16 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Register') }}</div>
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-success text-white text-center fs-5 fw-bold">
+                    {{ __('Register New Account') }}
+                </div>
 
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
+                        {{-- Name Field --}}
                         <div class="row mb-3">
                             <label for="name" class="col-md-4 col-form-label text-md-end">{{ __('Name') }}</label>
 
@@ -25,6 +28,7 @@
                             </div>
                         </div>
 
+                        {{-- Email Field --}}
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
@@ -39,6 +43,7 @@
                             </div>
                         </div>
 
+                        {{-- Password Field --}}
                         <div class="row mb-3">
                             <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
 
@@ -53,6 +58,7 @@
                             </div>
                         </div>
 
+                        {{-- Confirm Password Field --}}
                         <div class="row mb-3">
                             <label for="password-confirm" class="col-md-4 col-form-label text-md-end">{{ __('Confirm Password') }}</label>
 
@@ -63,12 +69,25 @@
 
                         <div class="row mb-0">
                             <div class="col-md-6 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-success">
                                     {{ __('Register') }}
                                 </button>
                             </div>
                         </div>
                     </form>
+                    
+                    {{-- *** ส่วนที่แก้ไข: ข้อความสำหรับสลับไปหน้า Login *** --}}
+                    @if (Route::has('login'))
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-1">
+                            Already have an account? 
+                        </p>
+                        <a class="text-decoration-none fw-bold text-primary fs-5" href="{{ route('login') }}">
+                            <i class="bi bi-person-fill-lock me-1"></i> Click here to login
+                        </a>
+                    </div>
+                    @endif
+                    {{-- *** สิ้นสุดส่วนแก้ไข *** --}}
                 </div>
             </div>
         </div>
