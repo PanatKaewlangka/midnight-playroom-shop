@@ -4,7 +4,8 @@
 
 # Welcome to The Midnight Playroom
 **Welcome to Midnight Playroom** where haunted dolls find a loving home.
-Our dolls may look eerie, but they carry no curse. Each one tells a unique story, waiting for someone brave enough to listen.
+Some spirits are kind, some are cruel, yet all are bound by the stories they keep.  
+Each doll awaits a heart brave enough to see beyond the fear.
 
 ## Project Overview
 Midnight Playroom is an e-commerce web application that allows users to explore, review, and purchase haunted dolls
