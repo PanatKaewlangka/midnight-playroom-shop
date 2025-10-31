@@ -17,33 +17,51 @@
     <div class="row mb-5">
         <div class="col-md-5">
             <img src="{{ asset($product->image_url) }}" class="img-fluid" alt="{{ $product->name }}">
+
         </div>
+        
         <div class="col-md-7">
             <h2>{{ $product->name }}</h2>
-            <p class="lead">${{ number_format($product->price, 2) }}</p>
+            <p class="lead text-danger fs-3">${{ number_format($product->price, 2) }}</p>
 
-             {{-- *** เพิ่มตรงนี้: แสดง Category *** --}}
+            {{-- แสดง Category --}}
             @if ($product->category)
                 <p class="text-muted lead">Category: 
-                        {{ $product->category->name }}
+                    {{ $product->category->name }}
                 </p>
             @endif
-            {{-- ************************************ --}}
-
+            
+            <hr>
             <p>{{ $product->description }}</p>
 
-        
+            {{-- แสดง Stock Status --}}
+            <div class="mb-4">
+                <h5 class="d-inline me-2">Stock:</h5>
+                @if ($product->stock_quantity > 0)
+                    <span class="fs-6">
+                        {{ $product->stock_quantity }}
+                    </span>
+                @else
+                    <span class="badge bg-danger fs-6">
+                        Out of Stock
+                    </span>
+                @endif
+            </div>
+            
             {{-- Form สำหรับ Add to Cart --}}
             <form action="{{ route('cart.add', $product->product_id) }}" method="POST">
                 @csrf
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" style="width: 100px;">
-                </div>
-
-                <button type="submit" class="btn btn-success btn-lg">
-                    <i class="bi bi-cart-plus"></i> Add to Cart 
-                </button>
+                @if ($product->stock_quantity > 0)
+                    
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-cart-plus"></i> Add to Cart 
+                    </button>
+                @else
+                    {{-- ปุ่มถูก Disable เมื่อสินค้าหมด --}}
+                    <button type="submit" class="btn btn-secondary btn-lg" disabled>
+                        <i class="bi bi-cart-plus"></i> Currently Unavailable
+                    </button>
+                @endif
             </form>
             
             <div class="mt-4">
@@ -76,7 +94,6 @@
 
             {{-- 2. ฟอร์มสำหรับส่ง Review ใหม่ (สำหรับ Verified Buyer) --}}
             @auth
-                {{-- ตรวจสอบว่าเคยรีวิวแล้วหรือไม่ --}}
                 @php
                     $hasReviewed = $product->reviews->where('user_id', Auth::id())->isNotEmpty();
                     // $canReview มาจาก ProductController@show
@@ -100,8 +117,8 @@
                                 <div id="star-rating-area" class="d-flex align-items-center">
                                     @for ($i = 1; $i <= 5; $i++)
                                         <i class="bi bi-star me-1 rating-star" 
-                                           data-rating="{{ $i }}" 
-                                           style="font-size: 1.5rem; cursor: pointer; color: #ced4da;"></i> 
+                                            data-rating="{{ $i }}" 
+                                            style="font-size: 1.5rem; cursor: pointer; color: #ced4da;"></i> 
                                     @endfor
                                 </div>
                                 
@@ -168,6 +185,7 @@
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </form>
+                                {{-- ปุ่มแก้ไขใช้ Modal --}}
                                 <button type="button" class="btn btn-info btn-sm text-white" 
                                         data-bs-toggle="modal" data-bs-target="#editReviewModal{{ $review->review_id }}" 
                                         data-review-id="{{ $review->review_id }}">
@@ -184,7 +202,6 @@
     </div>
 </div>
 @endsection
-
 
 {{-- Modal สำหรับแก้ไข Review --}}
 @auth
@@ -203,7 +220,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    {{-- MODAL BODY (แก้แล้ว) --}}
+                    {{-- MODAL BODY --}}
                     <div class="modal-body">
                         
                         {{-- 1. ส่วน Rating (ดาว) --}}
@@ -234,7 +251,7 @@
                         
                     </div>
 
-                    {{-- MODAL FOOTER (แก้แล้ว) --}}
+                    {{-- MODAL FOOTER --}}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button> 
@@ -274,7 +291,7 @@
         if (ratingArea) {
             updateStarDisplay(ratingArea, selectedRating, '.rating-star'); // แสดงผลดาวเริ่มต้น
 
-            // Event Listeners สำหรับ Hover (ต้องผูกกับ Element โดยตรง)
+            // Event Listeners สำหรับ Hover และ Click (ต้องผูกกับ Element โดยตรง)
             ratingArea.querySelectorAll('.rating-star').forEach(star => {
                 star.addEventListener('mouseenter', function() {
                     updateStarDisplay(ratingArea, parseInt(this.dataset.rating), '.rating-star');
@@ -293,33 +310,29 @@
             ratingArea.closest('form').addEventListener('submit', function(e) {
                 if (selectedRating === 0) {
                     e.preventDefault();
-                    // เปลี่ยนจาก alert() เป็นการแสดงผลข้อความใน UI แทน (ตามหลักการ Canvas)
-                    // เนื่องจากไม่มี UI สำหรับแสดง error ตรงนี้ ผมจะใช้ console.error แทน 
-                    console.error('Please select a star rating before submitting your review.');
+                    // ใน production ควรแสดงข้อความ error ใน UI
+                    console.error('Please select a star rating before submitting your review.'); 
                 }
             });
         }
 
 
         // --- 2. Logic สำหรับ Modal แก้ไข (Edit Review Modal) ---
+        
         // 2.1. Event Delegation: Click ใน Modal (บันทึกค่าคะแนน)
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('rating-star-modal')) {
                 const clickedStar = e.target;
                 const clickedRating = parseInt(clickedStar.dataset.rating);
 
-                // 1. หา Element ที่เป็น Modal Body ที่อยู่ใกล้ที่สุด
                 const modalBody = clickedStar.closest('.modal-body'); 
                 
                 if (modalBody) {
-                    // 2. ค้นหา Input Field ที่ซ่อนอยู่ ที่มี name="rating" ภายใน Modal Body นั้น (แก้ปัญหา Rating ไม่เปลี่ยน)
                     const ratingInput = modalBody.querySelector('input[name="rating"]');
 
                     if (ratingInput) {
-                        // 3. กำหนดค่าใหม่ให้ Input Field นี้
                         ratingInput.value = clickedRating; 
                         
-                        // อัปเดตการแสดงผลดาว
                         const modalArea = clickedStar.closest('.modal-rating-area');
                         if (modalArea) {
                             updateStarDisplay(modalArea, clickedRating, '.rating-star-modal');
@@ -342,7 +355,8 @@
         document.addEventListener('mouseout', function(e) {
             if (e.target.classList.contains('rating-star-modal')) {
                 const modalArea = e.target.closest('.modal-rating-area');
-                const currentModalRating = parseInt(modalArea.querySelector('input[name="rating"]').value); // แก้ให้ค้นหาตาม name="rating"
+                // ค้นหาค่าคะแนนที่ถูกบันทึกไว้ใน input field
+                const currentModalRating = parseInt(modalArea.querySelector('input[name="rating"]').value); 
                 updateStarDisplay(modalArea, currentModalRating, '.rating-star-modal');
             }
         });

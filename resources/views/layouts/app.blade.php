@@ -18,10 +18,20 @@
 </head>
 <body>
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+        {{-- 
+            *** จุดที่แก้ไข ***
+            เปลี่ยนจาก: <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm py-50">
+            เป็น:     <nav class="navbar navbar-expand-md bg-body shadow-sm">
+            (ลบ 'navbar-light' และ 'bg-white' ออก, เพิ่ม 'bg-body')
+        --}}
+        <nav class="navbar navbar-expand-md bg-body shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    <span class="fw-bold fs-5">The Midnight Playroom</span>
+                    
+                    {{-- โลโก้ที่เพิ่มเข้ามา --}}
+                    <img src="{{ asset('/images/home/logo.png') }}" alt="The Midnight Playroom Logo" style="height: 30px; width: auto;" class="d-inline-block align-middle me-2">
+                    
+                    <span class="fw-bold fs-5 align-middle">The Midnight Playroom</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
