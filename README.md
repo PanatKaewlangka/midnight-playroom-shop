@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://ik.imagekit.io/496kiwiBird/S__12328966.jpg?updatedAt=1761917994615" alt="Web Page" width="250"/>
+  <img src="https://ik.imagekit.io/496kiwiBird/S__12328966.jpg?updatedAt=1761917994615" alt="Web Page" />
 </div>
 
 # Welcome to The Midnight Playroom
